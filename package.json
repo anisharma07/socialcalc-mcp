@@ -1,15 +1,23 @@
 {
   "name": "socialcalc-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Model Context Protocol (MCP) server for SocialCalc spreadsheets.",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "socialcalc-mcp": "dist/index.js"
+    "socialcalc-mcp": "./dist/index.js"
   },
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anisharma07/socialcalc-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anisharma07/socialcalc-mcp/issues"
+  },
+  "homepage": "https://github.com/anisharma07/socialcalc-mcp#readme",
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
