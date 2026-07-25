@@ -1,18 +1,9 @@
 import * as fs from "fs/promises";
 import * as path from "path";
-import { fileURLToPath } from "url";
-import { createRequire } from "module";
 import { Workbook } from "../models/workbook.js";
 import { parseWorkbook } from "../adapters/socialcalc/parser.js";
 import { serializeWorkbookJson, serializeSheetSaveStr } from "../adapters/socialcalc/serializer.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Dynamically load the validator using CommonJS compatibility in ESM
-const require = createRequire(import.meta.url);
-const validatorPath = path.resolve(__dirname, "../../../pipeline-code/validator.js");
-const SocialCalcValidator = require(validatorPath);
+import SocialCalcValidator from "../utils/validator.js";
 
 /**
  * Service to manage Workbook lifecycle, file I/O, and sheet operations.
