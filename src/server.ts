@@ -217,7 +217,17 @@ export class SocialcalcMcpServer {
             value: { type: "string", description: "A single text or numeric value to write." },
             data: { 
               type: "array", 
-              items: { type: "array", items: { type: "any" } },
+              items: { 
+                type: "array", 
+                items: { 
+                  anyOf: [
+                    { type: "string" },
+                    { type: "number" },
+                    { type: "boolean" },
+                    { type: "null" }
+                  ]
+                }
+              },
               description: "A 2D array of grid values (alternative to single value)."
             }
           },

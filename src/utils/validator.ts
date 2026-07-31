@@ -298,7 +298,7 @@ class SocialCalcValidator {
                     }
                     const type = attrs[i + 1];
                     const value = attrs[i + 2];
-                    const formula = attrs.slice(i + 3).join(':'); // Rest is formula (may contain colons)
+                    const formula = attrs[i + 3];
 
                     if (!formula) {
                         this.addError(this.lineNumber, 'SYNTAX', `Cell ${coord}: 'vtf' formula cannot be empty`);
@@ -306,7 +306,7 @@ class SocialCalcValidator {
                     }
 
                     attrValue = `${type}:${value}:${formula}`;
-                    i = attrs.length; // Consumed everything
+                    i += 4; // Consumed 4 parts
                 }
                 // Special handling for b (borders) - it needs exactly 4 colon-separated values
                 else if (attrName === 'b') {

@@ -134,11 +134,11 @@ export function parseSheetSaveStr(sheet: Sheet, saveStr: string): void {
 
           let attrValue = "";
           if (attrName === "vtf") {
-            // vtf:type:value:formula (formula is rest of line and can contain colons)
+            // vtf:type:value:formula
             if (j + 3 >= attrs.length) break;
             const type = attrs[j + 1];
             const value = attrs[j + 2];
-            const formula = attrs.slice(j + 3).join(":");
+            const formula = attrs[j + 3];
             cell.valuetype = type;
             
             // Check if value is numeric or text
@@ -149,7 +149,7 @@ export function parseSheetSaveStr(sheet: Sheet, saveStr: string): void {
               cell.text = decodeString(value);
             }
             cell.formula = decodeString(formula);
-            j = attrs.length; // Consumed everything remaining
+            j += 4;
           } else if (attrName === "b") {
             // b:top:right:bottom:left
             if (j + 4 >= attrs.length) break;
