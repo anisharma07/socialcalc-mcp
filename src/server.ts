@@ -9,6 +9,8 @@ import { StyleService } from "./services/styles.js";
 import { SheetService } from "./services/sheet.js";
 import { Workbook } from "./models/workbook.js";
 import { serializeWorkbookJson } from "./adapters/socialcalc/serializer.js";
+import { sheetToCsv, csvToSheet } from "./adapters/csv/index.js";
+import { workbookToXlsx, xlsxToWorkbook } from "./adapters/xlsx/index.js";
 import { FORMULAS } from "./utils/formulas.js";
 import { SpreadsheetService } from "./services/spreadsheetService.js";
 
@@ -669,6 +671,57 @@ export class SocialcalcMcpServer {
           },
           required: ["workbookPath"]
         }
+      },
+      {
+        name: "export_to_csv",
+        description: "Exports a worksheet from a SocialCalc workbook (.json/.msc) to a CSV file.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            workbookPath: { type: "string", description: "Path to the source SocialCalc workbook (.json or .msc)." },
+            sheetNumber: { type: "number", description: "Optional 1-based sheet index." },
+            sheetName: { type: "string", description: "Optional sheet name." },
+            csvPath: { type: "string", description: "Destination path for the exported CSV file (must end with .csv)." }
+          },
+          required: ["workbookPath", "csvPath"]
+        }
+      },
+      {
+        name: "import_from_csv",
+        description: "Imports a CSV file into a worksheet of a SocialCalc workbook (.json/.msc).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            csvPath: { type: "string", description: "Path to the source CSV file (must end with .csv)." },
+            workbookPath: { type: "string", description: "Path to the target SocialCalc workbook (.json or .msc)." },
+            sheetName: { type: "string", description: "Optional name of the worksheet to import into (created if it doesn't exist)." }
+          },
+          required: ["csvPath", "workbookPath"]
+        }
+      },
+      {
+        name: "export_to_xlsx",
+        description: "Exports a SocialCalc workbook (.json/.msc) to an Excel XLSX file.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            workbookPath: { type: "string", description: "Path to the source SocialCalc workbook (.json or .msc)." },
+            xlsxPath: { type: "string", description: "Destination path for the exported XLSX file (must end with .xlsx)." }
+          },
+          required: ["workbookPath", "xlsxPath"]
+        }
+      },
+      {
+        name: "import_from_xlsx",
+        description: "Imports an Excel XLSX file into a SocialCalc workbook (.json/.msc).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            xlsxPath: { type: "string", description: "Path to the source XLSX file (must end with .xlsx)." },
+            workbookPath: { type: "string", description: "Path to the target SocialCalc workbook (.json or .msc)." }
+          },
+          required: ["xlsxPath", "workbookPath"]
+        }
       }
     ];
   }
@@ -685,6 +738,27 @@ export class SocialcalcMcpServer {
           if (args === undefined || args[reqProp] === undefined || args[reqProp] === null || args[reqProp] === "") {
             throw new Error(`Missing required argument '${reqProp}' for tool '${name}'`);
           }
+        }
+      }
+
+      if (args && args.workbookPath) {
+        const ext = path.extname(args.workbookPath).toLowerCase();
+        if (ext !== ".json" && ext !== ".msc") {
+          throw new Error(`Invalid workbook format: '${ext}'. Core operations only support '.json' and '.msc' files. For CSV or XLSX, please use the import/export tools.`);
+        }
+      }
+
+      if (args && args.csvPath) {
+        const ext = path.extname(args.csvPath).toLowerCase();
+        if (ext !== ".csv") {
+          throw new Error(`Invalid CSV path: '${args.csvPath}'. File extension must be '.csv'.`);
+        }
+      }
+
+      if (args && args.xlsxPath) {
+        const ext = path.extname(args.xlsxPath).toLowerCase();
+        if (ext !== ".xlsx") {
+          throw new Error(`Invalid XLSX path: '${args.xlsxPath}'. File extension must be '.xlsx'.`);
         }
       }
 
@@ -1097,10 +1171,7 @@ export class SocialcalcMcpServer {
           sheet.maxRow = 1;
           workbook.setActiveSheet("sheet1");
 
-          const absolutePath = path.resolve(args.workbookPath);
-          await fs.mkdir(path.dirname(absolutePath), { recursive: true });
-          const serialized = serializeWorkbookJson(workbook);
-          await fs.writeFile(absolutePath, serialized, "utf-8");
+          await adapter.saveWorkbook(workbook, args.workbookPath);
 
           return {
             content: [{ type: "text", text: `Successfully created workbook at '${args.workbookPath}' with sheet '${sheetName}'.` }]
@@ -1367,6 +1438,81 @@ export class SocialcalcMcpServer {
 
           return {
             content: [{ type: "text", text: `### Sheet Summary: ${sheet.name}\n\`\`\`json\n${JSON.stringify(summary, null, 2)}\n\`\`\`` }]
+          };
+        }
+
+        case "export_to_csv": {
+          const workbook = await adapter.openWorkbook(args.workbookPath);
+          const sheet = resolveSheet(workbook, args);
+          if (!sheet) throw new Error("Target sheet not found");
+
+          const csvContent = sheetToCsv(sheet);
+          const absoluteCsvPath = path.resolve(args.csvPath);
+          await fs.mkdir(path.dirname(absoluteCsvPath), { recursive: true });
+          await fs.writeFile(absoluteCsvPath, csvContent, "utf-8");
+
+          return {
+            content: [{ type: "text", text: `Successfully exported sheet '${sheet.name}' to CSV at '${args.csvPath}'.` }]
+          };
+        }
+
+        case "import_from_csv": {
+          const absoluteCsvPath = path.resolve(args.csvPath);
+          let csvContent: string;
+          try {
+            csvContent = await fs.readFile(absoluteCsvPath, "utf-8");
+          } catch (err: any) {
+            throw new Error(`Failed to read CSV file at '${args.csvPath}': ${err.message}`);
+          }
+
+          const workbook = await adapter.openWorkbook(args.workbookPath);
+          let sheet;
+          if (args.sheetName) {
+            sheet = workbook.getSheetByName(args.sheetName);
+            if (!sheet) {
+              // Create sheet if it doesn't exist
+              sheet = adapter.createSheet(workbook, args.sheetName);
+            }
+          } else {
+            sheet = resolveSheet(workbook, args);
+          }
+
+          if (!sheet) throw new Error("Could not resolve target sheet for import.");
+
+          csvToSheet(sheet, csvContent);
+          await adapter.saveWorkbook(workbook, args.workbookPath);
+
+          return {
+            content: [{ type: "text", text: `Successfully imported CSV from '${args.csvPath}' into sheet '${sheet.name}' of workbook '${args.workbookPath}'.` }]
+          };
+        }
+
+        case "export_to_xlsx": {
+          const workbook = await adapter.openWorkbook(args.workbookPath);
+          const buffer = await workbookToXlsx(workbook);
+          const absoluteXlsxPath = path.resolve(args.xlsxPath);
+          await fs.mkdir(path.dirname(absoluteXlsxPath), { recursive: true });
+          await fs.writeFile(absoluteXlsxPath, buffer);
+
+          return {
+            content: [{ type: "text", text: `Successfully exported workbook to Excel XLSX at '${args.xlsxPath}'.` }]
+          };
+        }
+
+        case "import_from_xlsx": {
+          const absoluteXlsxPath = path.resolve(args.xlsxPath);
+          let buffer: Buffer;
+          try {
+            buffer = await fs.readFile(absoluteXlsxPath);
+          } catch (err: any) {
+            throw new Error(`Failed to read XLSX file at '${args.xlsxPath}': ${err.message}`);
+          }
+
+          const importedWorkbook = await xlsxToWorkbook(buffer);
+          await adapter.saveWorkbook(importedWorkbook, args.workbookPath);
+
+          return {
+            content: [{ type: "text", text: `Successfully imported Excel XLSX from '${args.xlsxPath}' into SocialCalc workbook '${args.workbookPath}'.` }]
           };
         }
 

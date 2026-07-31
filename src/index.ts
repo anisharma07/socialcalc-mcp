@@ -85,6 +85,11 @@ async function main() {
             throw new Error(`Access denied to path: ${workbookPath}`);
           }
 
+          const ext = path.extname(workbookPath).toLowerCase();
+          if (ext !== ".json" && ext !== ".msc") {
+            throw new Error(`Invalid file extension: '${workbookPath}'. Only .json and .msc workbook files are supported for synchronization.`);
+          }
+
           const resolvedPath = path.resolve(workbookPath);
           await fs.mkdir(path.dirname(resolvedPath), { recursive: true });
 
@@ -111,6 +116,11 @@ async function main() {
 
         if (!isSafePath(filePath)) {
           throw new Error(`Access denied to path: ${filePath}`);
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext !== ".json" && ext !== ".msc") {
+          throw new Error(`Invalid file extension: '${filePath}'. Only .json and .msc workbook files are supported.`);
         }
 
         const resolved = path.resolve(filePath);

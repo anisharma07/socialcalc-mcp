@@ -59,7 +59,10 @@ Configure a new MCP server in your editor settings:
 
 ## 📖 Tool API Reference
 
-The server exposes 35 tools grouped into functional categories:
+> [!IMPORTANT]
+> **Supported File Formats:** Core editing, styling, and inspection tools only support `.json` and `.msc` SocialCalc JSON workbook formats. To work with external formats like `.csv` or `.xlsx`, please use the respective import/export tools.
+
+The server exposes 39 tools grouped into functional categories:
 
 ### 1. Workbook Inspection & Navigation
 | Tool Name | Parameters | Description |
@@ -110,6 +113,14 @@ The server exposes 35 tools grouped into functional categories:
 | `describe_formula` | `name` (req) | Explains and provides a detailed example of a specific formula. |
 | `list_tool` | None | Lists all registered tools. |
 | `describe_tool` | `toolName` (req) | Describes tool parameters dynamically. |
+
+### 5. CSV & XLSX Import / Export
+| Tool Name | Parameters | Description |
+| :--- | :--- | :--- |
+| `export_to_csv` | `workbookPath` (req), `csvPath` (req), `sheetName`/`sheetNumber` (opt) | Exports a worksheet from a SocialCalc workbook (.json/.msc) to a CSV file. |
+| `import_from_csv` | `csvPath` (req), `workbookPath` (req), `sheetName` (opt) | Imports a CSV file into a worksheet of a SocialCalc workbook (.json/.msc). |
+| `export_to_xlsx` | `workbookPath` (req), `xlsxPath` (req) | Exports a SocialCalc workbook (.json/.msc) to an Excel XLSX file. |
+| `import_from_xlsx` | `xlsxPath` (req), `workbookPath` (req) | Imports an Excel XLSX file into a SocialCalc workbook (.json/.msc). |
 
 ---
 

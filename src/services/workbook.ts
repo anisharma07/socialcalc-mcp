@@ -13,6 +13,10 @@ export class WorkbookService {
    * Loads a workbook from an MSC file on disk.
    */
   static async loadWorkbook(filePath: string): Promise<Workbook> {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext !== ".json" && ext !== ".msc") {
+      throw new Error(`Invalid file extension: '${filePath}'. Only .json and .msc files are supported.`);
+    }
     try {
       const absolutePath = path.resolve(filePath);
       const data = await fs.readFile(absolutePath, "utf-8");
@@ -64,6 +68,10 @@ export class WorkbookService {
    * Runs the validator first to prevent writing any invalid save strings.
    */
   static async saveWorkbook(workbook: Workbook, filePath: string): Promise<void> {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext !== ".json" && ext !== ".msc") {
+      throw new Error(`Invalid file extension: '${filePath}'. Only .json and .msc files are supported.`);
+    }
     // 1. Run strict validation first
     WorkbookService.validateWorkbook(workbook);
 
