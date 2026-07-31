@@ -26,7 +26,7 @@ async function main() {
   const mcpServer = new SocialcalcMcpServer();
 
   // Create an HTTP server on port 5002 for browser testing
-  const PORT = 5002;
+  const PORT = process.env.SOCIALCALC_PORT ? parseInt(process.env.SOCIALCALC_PORT, 10) : 5002;
   const httpServer = http.createServer(async (req, res) => {
     // Add CORS headers for browser compatibility
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -127,6 +127,14 @@ async function main() {
 
     res.writeHead(404);
     res.end();
+  });
+
+  httpServer.on("error", (error: any) => {
+    if (error.code === "EADDRINUSE") {
+      console.error(`[Warning] HTTP server port ${PORT} is already in use. Local test HTTP server could not start, but stdio transport is active.`);
+    } else {
+      console.error(`[Warning] HTTP server failed to start: ${error.message}`);
+    }
   });
 
   httpServer.listen(PORT, () => {
