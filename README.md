@@ -4,6 +4,9 @@
 [![License](https://img.shields.io/github/license/anisharma07/socialcalc-mcp.svg)](https://github.com/anisharma07/socialcalc-mcp/blob/main/LICENSE)
 [![GitHub Issues](https://img.shields.io/github/issues/anisharma07/socialcalc-mcp.svg)](https://github.com/anisharma07/socialcalc-mcp/issues)
 
+🔗 **NPM Package**: [https://www.npmjs.com/package/socialcalc-mcp](https://www.npmjs.com/package/socialcalc-mcp)  
+📁 **GitHub Repository**: [https://github.com/anisharma07/socialcalc-mcp](https://github.com/anisharma07/socialcalc-mcp)
+
 A Model Context Protocol (MCP) server that provides cell-level and sheet-level spreadsheet editing, styling, and analytical capabilities for SocialCalc workbooks. It allows LLMs and desktop AI environments (such as **Claude Desktop**, **Cursor**, **VS Code**, and **Windsurf**) to programmatically inspect, query, format, and edit spreadsheet grids.
 
 This server supports **dual transport modes**: standard MCP Stdio transport for local agent orchestration, and an HTTP JSON-RPC bridge for browser-based tester interfaces and lightweight web clients.
