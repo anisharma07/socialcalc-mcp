@@ -1,4 +1,4 @@
-# 📊 SocialCalc MCP Server
+# 📊 SocialCalc MCP Server with Near Agent integration
 
 [![npm version](https://img.shields.io/npm/v/socialcalc-mcp.svg?style=flat-up)](https://www.npmjs.com/package/socialcalc-mcp)
 [![License](https://img.shields.io/github/license/anisharma07/socialcalc-mcp.svg)](https://github.com/anisharma07/socialcalc-mcp/blob/main/LICENSE)
